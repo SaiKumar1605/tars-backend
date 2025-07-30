@@ -8,7 +8,7 @@ venv/
 .env
 
 # FAISS and file outputs
-uploads/
+# uploads/
 faiss_index/
 
 # files
