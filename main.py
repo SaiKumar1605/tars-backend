@@ -1,6 +1,7 @@
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, Depends, APIRouter 
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi #added later for firabse authorization (APIRouter)
 
 import shutil, os
 
@@ -9,8 +10,36 @@ from ingest import ingest_uploaded_file
 from google_api.gmail import read_latest_emails
 from google_api.calendar import list_upcoming_events, create_calendar_event
 from slack_bot.client import send_slack_message
+from auth.firebase import verify_token
 
 app = FastAPI()
+
+#For endroute secure docs
+# def custom_openapi():
+#     if app.openapi_schema:
+#         return app.openapi_schema
+#     openapi_schema = get_openapi(
+#         title="TARS Backend API",
+#         version="1.0.0",
+#         description="Secure endpoints with Firebase",
+#         routes=app.routes,
+#     )
+#     openapi_schema["components"]["securitySchemes"] = {
+#         "BearerAuth": {
+#             "type": "http",
+#             "scheme": "bearer",
+#             "bearerFormat": "JWT",
+#         }
+#     }
+#     for path in openapi_schema["paths"]:
+#         for method in openapi_schema["paths"][path]:
+#             openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
+#     app.openapi_schema = openapi_schema
+#     return app.openapi_schema
+
+
+# 👇 Apply the custom OpenAPI
+# app.openapi = custom_openapi
 
 # CORS (for frontend communication)
 app.add_middleware(
@@ -64,3 +93,24 @@ def slack_send(channel: str = Form(...), message: str = Form(...)):
         return {"status": "sent", "timestamp": result["ts"]}
     else:
         return {"error": result["error"]}
+    
+#End point to secure routes    
+# @app.get("/secure-docs")
+# def secure_docs(user=Depends(verify_token)):
+#     return {
+#         "message": f"Welcome, {user['email']}",
+#         "uid": user["uid"]
+#     }
+
+router = APIRouter() 
+
+@router.get("/secure-docs")
+def secure_docs(user=Depends(verify_token)):
+    # return {"message": "Authorized access!","message": f"Welcome, {user['email']}" ,"uid": user["uid"]}
+    return {
+        "status": "Authorized",
+        "welcome": f"Welcome, {user['email']}",
+        "uid": user["uid"]
+    }
+
+app.include_router(router)
