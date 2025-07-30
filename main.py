@@ -8,6 +8,7 @@ from query import ask_question
 from ingest import ingest_uploaded_file
 from google_api.gmail import read_latest_emails
 from google_api.calendar import list_upcoming_events, create_calendar_event
+from slack_bot.client import send_slack_message
 
 app = FastAPI()
 
@@ -55,3 +56,11 @@ def calendar_events():
 def calendar_create(summary: str = Form(...), start: str = Form(...), end: str = Form(...)):
     link = create_calendar_event(summary, start, end)
     return {"event_link": link}
+
+@app.post("/slack/send")
+def slack_send(channel: str = Form(...), message: str = Form(...)):
+    result = send_slack_message(channel, message)
+    if result["ok"]:
+        return {"status": "sent", "timestamp": result["ts"]}
+    else:
+        return {"error": result["error"]}
