@@ -6,7 +6,20 @@ from langchain_community.document_loaders import (
     # UnstructuredWordLoader
 )
 
-from langchain_community.document_loaders import UnstructuredFileLoader #Can use for other file formats also
+#from langchain_community.document_loaders import UnstructuredFileLoader #Can use for other file formats also
+from docx import Document
+from langchain_core.documents import Document as LangchainDocument
+
+def load_docx_file(file_path):
+    doc = Document(file_path)
+    full_text = "\n".join([para.text for para in doc.paragraphs])
+    return [
+        LangchainDocument(
+            page_content=full_text,
+            metadata={"source": os.path.basename(file_path)}
+        )
+    ]
+
 
 def load_single_file(file_path):
     ext = os.path.splitext(file_path)[1].lower()
@@ -18,7 +31,8 @@ def load_single_file(file_path):
     elif ext == ".csv":
         loader = CSVLoader(file_path)
     elif ext == ".docx":
-        loader = UnstructuredFileLoader(file_path)
+        return load_docx_file(file_path)
+        # loader = UnstructuredFileLoader(file_path)
     else:
         raise ValueError(f"Unsupported file type: {ext}")
     
