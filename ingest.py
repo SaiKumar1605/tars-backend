@@ -37,10 +37,33 @@ if __name__ == "__main__":
 
 embedding = OpenAIEmbeddings(api_key=api_key)
 
+################# LOCAL USE ###########################################
+
+# def ingest_uploaded_file(file_path):
+
+#     docs = load_single_file(file_path)
+#     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+#     chunks = splitter.split_documents(docs)
+#     db = FAISS.load_local("faiss_index", embedding, allow_dangerous_deserialization=True)(LOCAL)
+#     # db = FAISS.load_local("/tmp/faiss_index", embedding, allow_dangerous_deserialization=True) #fot (RENDER)
+#     db.add_documents(chunks) #add new data(chunks/documents)
+#     db.save_local("faiss_index") #overwrite with new data (Local)
+#     # db.save_local("/tmp/faiss_index")  # Save to tmp(render)
+
+
+############################# RENDER VERSION ##################################
+
 def ingest_uploaded_file(file_path):
     docs = load_single_file(file_path)
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     chunks = splitter.split_documents(docs)
-    db = FAISS.load_local("faiss_index", embedding, allow_dangerous_deserialization=True)
-    db.add_documents(chunks) #add new data(chunks/documents)
-    db.save_local("faiss_index") #overwrite with new data
+
+    faiss_path = "/tmp/faiss_index"
+
+    if os.path.exists(f"{faiss_path}/index.faiss"):
+        db = FAISS.load_local(faiss_path, embedding, allow_dangerous_deserialization=True)
+        db.add_documents(chunks)
+    else:
+        db = FAISS.from_documents(chunks, embedding)
+
+    db.save_local(faiss_path)    
