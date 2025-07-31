@@ -43,7 +43,8 @@ if __name__ == '__main__':
 
 def ask_question(query):
     embeddings = OpenAIEmbeddings(api_key=api_key)
-    db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
+    # db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True) #For Local
+    db = FAISS.load_local("/tmp/faiss_index", embeddings, allow_dangerous_deserialization=True)   #For render
     retriever = db.as_retriever()
     qa = RetrievalQA.from_chain_type(
         llm=ChatOpenAI(model_name="gpt-3.5-turbo", api_key=api_key),
