@@ -56,11 +56,17 @@ def health():
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    filename = f"uploads/{file.filename}" 
-    with open(filename, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer) #copies/stores file to local
+    
+    # filename = f"uploads/{file.filename}" 
+    # with open(filename, "wb") as buffer:
+    #     shutil.copyfileobj(file.file, buffer) #copies/stores file to local
+
+    temp_path = f"/tmp/{file.filename}"  # safe on Render & temporary path on 
+    with open(temp_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
     try:
-        ingest_uploaded_file(filename)
+        ingest_uploaded_file(temp_path)
         return {"status": "success", "filename": file.filename}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
