@@ -74,7 +74,9 @@ async def upload_file(file: UploadFile = File(...)):
 @app.post("/query")
 async def query_doc(question: str = Form(...)):
     try:
+        print(f'Incoming question: {question}')
         answer = ask_question(question)
+        print('question': question, 'answer': answer)
         return {"question": question, "answer": answer}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
